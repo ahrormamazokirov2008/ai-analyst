@@ -62,17 +62,29 @@ if uploaded_file:
     m4.metric(f"O'rtacha {time_unit} xarajat", f"{avg_expense:,.0f}")
     m4.caption(f"Ma'lumotlar {time_unit} formatda tahlil qilinmoqda")
 
-    # 4. GRAFIK (SAVDO VA XARAJAT ALOHIDA)
+    # 4. Aqlli va tiniq grafik
     st.divider()
-    st.subheader("📈 Dinamika Tahlili")
-    cols_to_plot = []
-    if sales_col: cols_to_plot.append(sales_col)
-    if expense_col: cols_to_plot.append(expense_col)
+    st.subheader("📈 Savdo va Xarajat Dinamikasi")
     
-    if date_col and cols_to_plot:
-        fig = px.line(df, x=date_col, y=cols_to_plot, 
-                     title="Vaqt kesimida savdo va xarajatlar",
-                     labels={'value': 'Miqdor', 'variable': 'Ko\'rsatkich'})
+    plot_cols = [sales_col]
+    if expense_col != "Mavjud emas": plot_cols.append(expense_col)
+    
+    if date_col:
+        plot_df = df.copy()
+        
+        # AVTOMATIK GRUPLASH (Chalkashlikni oldini olish uchun)
+        if len(df) > 90: # Agar 3 oydan ko'p ma'lumot bo'lsa
+            plot_df = plot_df.resample('W', on=date_col).mean().reset_index()
+            st.info("💡 Ma'lumotlar juda ko'p bo'lgani uchun grafik 'Haftalik o'rtacha' ko'rinishiga o'tkazildi.")
+        elif len(df) > 30: # Agar 1 oydan ko'p bo'lsa
+            plot_df = plot_df.resample('3D', on=date_col).mean().reset_index()
+            st.info("💡 Grafik tushunarli bo'lishi uchun ma'lumotlar 3 kunlik oraliqda umumlashtirildi.")
+
+        fig = px.line(plot_df, x=date_col, y=plot_cols, 
+                     title="Biznes dinamikasi (Optimallashtirilgan)",
+                     template="plotly_dark") # Dizaynni chiroyli qilish uchun
+        
+        fig.update_xaxes(rangeslider_visible=True)
         st.plotly_chart(fig, use_container_width=True)
 
     # 5. BASHORAT VA ANIQ TAVSIYALAR (Tuzatish 4 va 5)
