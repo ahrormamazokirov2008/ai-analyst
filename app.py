@@ -78,9 +78,7 @@ if uploaded_file:
         time_unit = "kunlik" if days_diff / data_points < 2 else "haftalik" if days_diff / data_points < 10 else "oylik"
         
     # 2. METRIKALAR (SAVDO VA XARAJAT ALOHIDA)
-
-
-   st.subheader(t["fin_status"])
+    st.subheader(t["fin_status"])
 
     m1, m2, m3, m4 = st.columns(4)
     
