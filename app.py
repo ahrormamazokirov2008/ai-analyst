@@ -1,40 +1,32 @@
-import streamlit as st
-import pandas as pd
-import plotly.express as px
-import numpy as np
-from sklearn.linear_model import LinearRegression
-from fpdf import FPDF
+# ... (kodning yuqori qismi o'zgarishsiz qoladi)
 
-st.set_page_config(page_title="AI Raqamli Tahlilchi", layout="wide", page_icon="📈")
+        # YANGI ANALITIKA MODULLARI
+        st.divider()
+        st.subheader("🧐 Biznesning Chuqur Tahlili")
+        
+        # 1. O'sish sur'atini hisoblash
+        df['O\'sish_%'] = df['Savdo'].pct_change() * 100
+        oxirgi_osish = df['O\'sish_%'].iloc[-1]
+        
+        # 2. Xarajat ulushi
+        xarajat_ulushi = (df['Xarajat'].sum() / df['Savdo'].sum()) * 100
+        
+        col_a, col_b = st.columns(2)
+        with col_a:
+            st.info(f"📈 **O'sish sur'ati:** Oxirgi oyda savdo {oxirgi_osish:.1f}% ga o'zgardi.")
+        with col_b:
+            st.info(f"💸 **Xarajat ulushi:** Har 100 so'm savdoning {xarajat_ulushi:.1f} so'mi xarajatga ketyapti.")
 
-st.title("📊 KOB uchun AI 'Raqamli Tahlilchi'")
-
-# Sidebar
-with st.sidebar:
-    st.header("📁 Ma'lumotlar")
-    uploaded_file = st.file_uploader("Excel/CSV faylni tanlang", type=['csv', 'xlsx'])
-
-if uploaded_file is not None:
-    try:
-        # Faylni o'qish
-        if uploaded_file.name.endswith('.csv'):
-            df = pd.read_csv(uploaded_file)
+        # 3. AI Strategik Tavsiyasi
+        st.subheader("💡 AI Strategik Tavsiyalari")
+        if oxirgi_osish > 0 and xarajat_ulushi < 70:
+            st.success("✅ Biznesingiz ideal holatda! Hozirgi strategiyani davom ettiring va ko'proq investitsiya kiriting.")
+        elif xarajat_ulushi > 80:
+            st.warning("⚠️ Diqqat! Xarajatlar juda yuqori. Operatsion samaradorlikni oshirish yoki keraksiz xarajatlarni qisqartirish lozim.")
         else:
-            df = pd.read_excel(uploaded_file)
-            
-        df['Sana'] = pd.to_datetime(df['Sana'])
-        df['Foyda'] = df['Savdo'] - df['Xarajat']
+            st.info("ℹ️ Stabil holat. Savdoni oshirish uchun yangi marketing kanallarini sinab ko'ring.")
 
-        # Metrikalar
-        c1, c2, c3 = st.columns(3)
-        savdo_sum = df['Savdo'].sum()
-        foyda_sum = df['Foyda'].sum()
-        c1.metric("Umumiy Savdo", f"{savdo_sum} mln")
-        c2.metric("Umumiy Foyda", f"{foyda_sum} mln")
-        c3.metric("Rentabellik", f"{(foyda_sum/savdo_sum*100):.1f}%")
-
-        # Grafik
-        fig = px.line(df, x='Sana', y=['Savdo', 'Xarajat'], title="📈 Biznes Dinamikasi", markers=True)
+# ... (kodning qolgan qismi)        fig = px.line(df, x='Sana', y=['Savdo', 'Xarajat'], title="📈 Biznes Dinamikasi", markers=True)
         st.plotly_chart(fig, use_container_width=True)
 
         # AI Bashorat
