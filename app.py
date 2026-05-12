@@ -3,15 +3,45 @@ import pandas as pd
 import plotly.express as px
 import numpy as np
 from sklearn.linear_model import LinearRegression
-
 st.set_page_config(page_title="AI Business Intelligence Pro", layout="wide", page_icon="📊")
 
-st.title("🚀 Professional Biznes Analitika va Bashorat")
-
-# 1. MA'LUMOT YUKLASH
+# TILLAR LUG'ATI
+translations = {
+    "O'zbekcha": {
+        "title": "🚀 Professional Biznes Analitika",
+        "sidebar_head": "📂 Ma'lumotlar",
+        "upload_label": "CSV yoki Excel faylni tanlang",
+        "sales_label": "Savdo (Tushum) ustunini tanlang:",
+        "exp_label": "Xarajat (Chiqim) ustunini tanlang:",
+        "no_data": "Boshlash uchun biznes ma'lumotlarini yuklang."
+    },
+    "English": {
+        "title": "🚀 Professional Business Analytics",
+        "sidebar_head": "📂 Data Management",
+        "upload_label": "Choose CSV or Excel file",
+        "sales_label": "Select Sales Column:",
+        "exp_label": "Select Expense Column:",
+        "no_data": "Please upload data to start analysis."
+    },
+    "Русский": {
+        "title": "🚀 Профессиональная Бизнес Аналитика",
+        "sidebar_head": "📂 Данные",
+        "upload_label": "Выберите CSV или Excel файл",
+        "sales_label": "Выберите колонку продаж:",
+        "exp_label": "Выберите колонку расходов:",
+        "no_data": "Загрузите данные для начала анализа."
+    }
+}
+# 1. SIDEBARDA TILNI TANLASH
 with st.sidebar:
-    st.header("📂 Ma'lumotlar")
-    uploaded_file = st.file_uploader("CSV yoki Excel faylni tanlang", type=['csv', 'xlsx'])
+    lang = st.selectbox("🌐 Til / Language", ["O'zbekcha", "English", "Русский"])
+    t = translations[lang] # Tanlangan tilni yuklash
+    
+    st.divider()
+    st.header(t["sidebar_head"])
+    uploaded_file = st.file_uploader(t["upload_label"], type=['csv', 'xlsx'])
+
+st.title("🚀 Professional Biznes Analitika va Bashorat")
 
 if uploaded_file:
     # 1. Faylni o'qish (Encoding xatosini oldini olish bilan)
@@ -32,6 +62,13 @@ if uploaded_file:
     sales_col = next((col for col in df.columns if any(x in col.lower() for x in ['sales', 'savdo', 'tushum'])), None)
     expense_col = next((col for col in df.columns if any(x in col.lower() for x in ['expense', 'xarajat', 'chiqim'])), None)
 
+    st.sidebar.divider()
+    # Tanlangan tilga mos sarlavha (t["sales_label"])
+    sales_col = st.sidebar.selectbox(t["sales_label"], df.columns.tolist(), index=df.columns.tolist().index(sales_col) if sales_col in df.columns else 0)
+    
+    # Tanlangan tilga mos sarlavha (t["exp_label"])
+    expense_col = st.sidebar.selectbox(t["exp_label"], ["Mavjud emas"] + df.columns.tolist())
+
     if date_col:
         df[date_col] = pd.to_datetime(df[date_col])
         df = df.sort_values(date_col)
@@ -41,7 +78,7 @@ if uploaded_file:
         time_unit = "kunlik" if days_diff / data_points < 2 else "haftalik" if days_diff / data_points < 10 else "oylik"
         
     # 2. METRIKALAR (SAVDO VA XARAJAT ALOHIDA)
-    st.subheader("📌 Moliyaviy Holat")
+   st.subheader(t["fin_status"])
     m1, m2, m3, m4 = st.columns(4)
     
     total_sales = df[sales_col].sum() if sales_col else 0
@@ -126,7 +163,7 @@ if uploaded_file:
             st.write(f"Joriy holatda savdo yo'nalishi **{holat_matni}** tomon ketyapti.")
 
         with col_b:
-            st.write("### 🎯 Nima qilish kerak?")
+            st.write(f"### {t['action_plan']}")
             if holat_rangi == "success": st.success(tavsiya)
             elif holat_rangi == "warning": st.warning(tavsiya)
             else: st.info(tavsiya)
