@@ -9,7 +9,7 @@ st.title("📊 KOB uchun AI 'Raqamli Tahlilchi'")
 
 # Test ma'lumotlari
 data = {
-    'Sana': pd.date_range(start='2024-01-01', periods=12, freq='M'),
+    'Sana': pd.date_range(start='2024-01-01', periods=12, freq='ME'),
     'Savdo': [120, 150, 140, 180, 210, 195, 230, 260, 245, 290, 310, 340],
     'Xarajat': [80, 95, 90, 110, 130, 125, 140, 155, 150, 170, 185, 200]
 }
