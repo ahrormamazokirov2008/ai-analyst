@@ -134,6 +134,5 @@ with c_b:
         st.warning(tavsiya)
     else:
         st.info(tavsiya)
-
 else:
     st.info("Boshlash uchun biznes ma'lumotlarini yuklang. AI tizimi ularni avtomatik tahlil qilib, sizga tavsiyalar beradi.")
