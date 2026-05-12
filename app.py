@@ -3,38 +3,70 @@ import pandas as pd
 import plotly.express as px
 import numpy as np
 from sklearn.linear_model import LinearRegression
-from fpdf import FPDF
 
-# --- SAHIFA SOZLAMALARI ---
-st.set_page_config(page_title="AI Business Architect", layout="wide")
+st.set_page_config(page_title="AI Business Architect", layout="wide", page_icon="🚀")
 
-# --- MODULLAR (Funksiyalar) ---
+st.title("🚀 Big Data AI Analitika — Walmart Edition")
 
-def dashboard_module(df):
-    st.subheader("📊 Asosiy Monitoring")
-    c1, c2, c3 = st.columns(3)
-    c1.metric("Umumiy Savdo", f"{df['Savdo'].sum():,.0f} mln")
-    c2.metric("Umumiy Foyda", f"{df['Foyda'].sum():,.0f} mln")
-    c3.metric("Rentabellik", f"{(df['Foyda'].sum()/df['Savdo'].sum()*100):.1f}%")
+with st.sidebar:
+    st.header("📁 Ma'lumotlar")
+    uploaded_file = st.file_uploader("CSV faylni yuklang (Walmart train.csv)", type=['csv'])
+
+if uploaded_file:
+    # Ma'lumotni yuklash
+    df = pd.read_csv(uploaded_file)
     
-    fig = px.line(df, x='Sana', y=['Savdo', 'Xarajat'], title="Savdo dinamikasi", markers=True)
-    st.plotly_chart(fig, use_container_width=True)
-
-def what_if_module(df):
-    st.subheader("🧪 Strategik Simulyator (What-If)")
-    col1, col2 = st.columns([1, 2])
+    # 1. SANANI AVTOMATIK TOPISH
+    date_col = None
+    for col in df.columns:
+        if col.lower() in ['date', 'sana', 'timestamp', 'time']:
+            date_col = col
+            df[date_col] = pd.to_datetime(df[date_col])
+            break
     
-    with col1:
-        growth = st.slider("Savdo o'sishi (%)", 0, 100, 10)
-        reduction = st.slider("Xarajatlarni qisqartirish (%)", 0, 50, 5)
-    
-    with col2:
-        new_savdo = df['Savdo'].sum() * (1 + growth/100)
-        new_xarajat = df['Xarajat'].sum() * (1 - reduction/100)
-        new_foyda = new_savdo - new_xarajat
-        st.success(f"Kutilayotgan yangi foyda: **{new_foyda:,.1f} mln**")
-        st.info(f"Foyda o'zgarishi: **{new_foyda - df['Foyda'].sum():,.1f} mln**")
+    if date_col:
+        # 2. DO'KONLARNI FILTRLASH (Walmart ma'lumotlari uchun maxsus)
+        if 'Store' in df.columns:
+            st.sidebar.divider()
+            stores = sorted(df['Store'].unique())
+            selected_store = st.sidebar.selectbox("Do'konni tanlang:", stores)
+            df = df[df['Store'] == selected_store]
+            st.sidebar.info(f"{selected_store}-do'kon ma'lumotlari yuklandi.")
 
+        # 3. TAHLIL USTUNINI TANLASH
+        numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+        target_col = st.sidebar.selectbox("Tahlil qilinadigan raqamli ustun:", numeric_cols, 
+                                         index=numeric_cols.index('Weekly_Sales') if 'Weekly_Sales' in numeric_cols else 0)
+
+        # ASOSIY MONITORING
+        st.subheader(f"📊 {selected_store if 'Store' in df.columns else ''} Do'kon: {target_col} Dinamikasi")
+        
+        # Grafik
+        fig = px.line(df, x=date_col, y=target_col, title=f"Vaqt bo'yicha {target_col} o'zgarishi")
+        st.plotly_chart(fig, use_container_width=True)
+
+        # 4. AI BASHORATI (Training)
+        st.divider()
+        st.subheader("🤖 AI Bashorat Modeli")
+        
+        df_clean = df.dropna(subset=[target_col])
+        X = np.array(range(len(df_clean))).reshape(-1, 1)
+        y = df_clean[target_col].values
+        
+        model = LinearRegression().fit(X, y)
+        prediction = model.predict([[len(df_clean)]])[0]
+        
+        st.success(f"Kelasi davr uchun AI bashorati: **{prediction:,.2f}**")
+        
+        # Qo'shimcha statistika
+        col1, col2 = st.columns(2)
+        col1.metric("O'rtacha ko'rsatkich", f"{df_clean[target_col].mean():,.2f}")
+        col2.metric("Eng yuqori natija", f"{df_clean[target_col].max():,.2f}")
+
+    else:
+        st.error("Xatolik: Faylda sana ustuni topilmadi. Ustun nomi 'Date' yoki 'Sana' ekanligini tekshiring.")
+else:
+    st.info("Walmart 'train.csv' faylini yuklang va Big Data tahlilini boshlang.")
 def ai_prediction_module(df):
     st.subheader("🤖 AI Bashorati")
     X = np.array(range(len(df))).reshape(-1, 1)
