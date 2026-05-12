@@ -87,52 +87,58 @@ if uploaded_file:
         fig.update_xaxes(rangeslider_visible=False)
         st.plotly_chart(fig, use_container_width=True)
 
-    # 5. BASHORAT VA ANIQ TAVSIYALAR (Tuzatish 4 va 5)
+    # 5. AI Strategik Maslahatlari
     st.divider()
-    st.subheader("💡 AI Strategik Maslahatlari")
-    
+    st.subheader("🤖 AI Strategik Maslahatlari")
+
     if sales_col:
-        # AI Training (Simple)
+        # AI Modelini tayyorlash va bashorat
         X = np.array(range(len(df))).reshape(-1, 1)
         y_sales = df[sales_col].values
         model = LinearRegression().fit(X, y_sales)
         sales_pred = model.predict([[len(df)]])[0]
-        sales_growth = ((sales_pred - df[sales_col].mean()) / df[sales_col].mean()) * 100
+        
+        # O'rtacha savdoni hisoblash
+        avg_sales = df[sales_col].mean()
+        
+        # O'sish sur'atini hisoblash (Ziddiyatni oldini olish uchun)
+        sales_growth = ((sales_pred - avg_sales) / avg_sales) * 100 if avg_sales != 0 else 0
 
-        c_a, c_b = st.columns(2)
-        with c_a:
+        # Bir xil mantiqiy holatlarni belgilash
+        if sales_growth > 3:
+            holat_matni = "o'sish"
+            holat_rangi = "success"
+            tavsiya = "✅ **Savdo o'smoqda:** Talab yuqori. Tavsiya: Tovar zaxiralarini oshiring va marketingni kuchaytiring."
+        elif sales_growth < -3:
+            holat_matni = "pasayish"
+            holat_rangi = "warning"
+            tavsiya = "⚠️ **Savdo pasaymoqda:** Mijozlar kamayishi kutilmoqda. Tavsiya: Narxlar strategiyasini qayta ko'rib chiqing yoki aksiyalar qiling."
+        else:
+            holat_matni = "barqaror"
+            holat_rangi = "info"
+            tavsiya = "ℹ️ **Barqaror holat:** Bozorda keskin o'zgarish kutilmayapti. Xizmat sifatini oshirishga va mijozlar sodiqligiga e'tibor bering."
+
+        # Ekranga chiqarish (Metrikalar va Tavsiyalar)
+        col_a, col_b = st.columns(2)
+        
+        with col_a:
             st.info(f"🔮 **Keyingi davr uchun bashorat:** {sales_pred:,.0f}")
-            st.write(f"Joriy holatda savdo yo'nalishi **{'o\'sish' if sales_growth > 0 else 'pasayish'}** tomon ketyapti.")
+            st.write(f"Joriy holatda savdo yo'nalishi **{holat_matni}** tomon ketyapti.")
 
-        with c_b:
+        with col_b:
             st.write("### 🎯 Nima qilish kerak?")
-        # 1. Avval holatni aniqlab olamiz (faqat bir marta)
-if sales_growth > 3:
-    holat_matni = "o'sish"
-    holat_rangi = "success"
-    tavsiya = "✅ **Savdo o'smoqda:** Talab yuqori. Tavsiya: Tovar zaxiralarini oshiring va marketingni kuchaytiring."
-elif sales_growth < -3:
-    holat_matni = "pasayish"
-    holat_rangi = "warning"
-    tavsiya = "⚠️ **Savdo pasaymoqda:** Mijozlar kamayishi kutilmoqda. Tavsiya: Narxlar strategiyasini qayta ko'rib chiqing yoki aksiyalar qiling."
-else:
-    holat_matni = "barqaror"
-    holat_rangi = "info"
-    tavsiya = "ℹ️ **Barqaror holat:** Bozorda keskin o'zgarish kutilmayapti. Xizmat sifatini oshirishga e'tibor qarating."
-
-# 2. Endi natijalarni ekranga chiqaramiz
-with c_a:
-    st.info(f"🔮 **Keyingi davr uchun bashorat:** {sales_pred:,.0f}")
-    st.write(f"Joriy holatda savdo yo'nalishi **{holat_matni}** tomon ketyapti.")
-
-with c_b:
-    st.write("### 🎯 Nima qilish kerak?")
-    # Holatga qarab tegishli rangli qutini chiqaramiz
-    if holat_rangi == "success":
-        st.success(tavsiya)
-    elif holat_rangi == "warning":
-        st.warning(tavsiya)
-    else:
-        st.info(tavsiya)
-else:
-    st.info("Boshlash uchun biznes ma'lumotlarini yuklang. AI tizimi ularni avtomatik tahlil qilib, sizga tavsiyalar beradi.")
+            if holat_rangi == "success": st.success(tavsiya)
+            elif holat_rangi == "warning": st.warning(tavsiya)
+            else: st.info(tavsiya)
+        
+        # 6. Xarajatlar tahlili (agar tanlangan bo'lsa)
+        if expense_col != "Mavjud emas":
+            st.divider()
+            total_sales = df[sales_col].sum()
+            total_expenses = df[expense_col].sum()
+            expense_ratio = (total_expenses / total_sales) * 100 if total_sales > 0 else 0
+            
+            if expense_ratio > 80:
+                st.error(f"❗ **Xarajatlar juda yuqori:** Tushumning {expense_ratio:.1f}% qismi xarajatga ketyapti. Tejamkorlik choralarini ko'ring.")
+            elif expense_ratio < 40:
+                st.success(f"💎 **Yuqori rentabellik:** Xarajatlar nazoratda ({expense_ratio:.1f}%). Biznesni kengaytirish haqida o'ylash mumkin.")
