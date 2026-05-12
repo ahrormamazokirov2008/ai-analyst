@@ -77,10 +77,11 @@ if uploaded_file:
         data_points = len(df)
         time_unit = "kunlik" if days_diff / data_points < 2 else "haftalik" if days_diff / data_points < 10 else "oylik"
         
+   
     # 2. METRIKALAR (SAVDO VA XARAJAT ALOHIDA)
     st.subheader(t["fin_status"])
-
     m1, m2, m3, m4 = st.columns(4)
+
     
     total_sales = df[sales_col].sum() if sales_col else 0
     total_expenses = df[expense_col].sum() if expense_col else 0
