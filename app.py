@@ -107,9 +107,9 @@ if uploaded_file:
         with c_b:
             st.write("### 🎯 Nima qilish kerak?")
         # Shartlarni biroz kengaytiramiz (3% o'sish/pasayish ham hisobga olinadi)
-        if growth > 3:
+        if sales_growth > 3:
             st.success(f"✅ **Savdo o'smoqda:** Talab yuqori. Tavsiya: Tovar zaxiralarini oshiring va marketingni kuchaytiring.")
-        elif growth < -3:
+        elif sales_growth < -3:
             st.warning("⚠️ **Savdo pasaymoqda:** Mijozlar kamayishi kutilmoqda. Tavsiya: Narxlar strategiyasini qayta ko'rib chiqing yoki aksiyalar qiling.")
         else:
             # Agar o'sish ham, pasayish ham 3% dan kam bo'lsa, barqarorlik haqida yozadi
