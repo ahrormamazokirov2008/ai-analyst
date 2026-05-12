@@ -81,6 +81,7 @@ if uploaded_file:
 
 
    st.subheader(t["fin_status"])
+
     m1, m2, m3, m4 = st.columns(4)
     
     total_sales = df[sales_col].sum() if sales_col else 0
