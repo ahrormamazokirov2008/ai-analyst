@@ -4,37 +4,78 @@ import plotly.express as px
 import numpy as np
 from sklearn.linear_model import LinearRegression
 
-st.set_page_config(page_title="AI Business Architect", layout="wide", page_icon="🚀")
+# 1. Sahifa sozlamalari
+st.set_page_config(page_title="AI Business Intelligence", layout="wide")
 
-st.title("🚀 Big Data AI Analitika — Walmart Edition")
+st.title("📊 Professional AI Biznes Tahlilchi")
 
+# Sidebar - Fayl yuklash
 with st.sidebar:
-    st.header("📁 Ma'lumotlar")
-    uploaded_file = st.file_uploader("CSV faylni yuklang (Walmart train.csv)", type=['csv'])
+    st.header("📂 Ma'lumotlarni yuklash")
+    uploaded_file = st.file_uploader("Walmart 'train.csv' faylini tanlang", type=['csv'])
+    
+    # Valyuta tanlash (Siz so'ragandek)
+    currency = st.selectbox("Valyutani tanlang:", ["$", "so'm", "ta"])
 
 if uploaded_file:
-    # Ma'lumotni yuklash
+    # Ma'lumotni o'qish (Faqat kerakli ustunlarni o'qiymiz, tezroq ishlashi uchun)
     df = pd.read_csv(uploaded_file)
-    
-    # 1. SANANI AVTOMATIK TOPISH
-    date_col = None
-    for col in df.columns:
-        if col.lower() in ['date', 'sana', 'timestamp', 'time']:
-            date_col = col
-            df[date_col] = pd.to_datetime(df[date_col])
-            break
-    
-    if date_col:
-        # 2. DO'KONLARNI FILTRLASH (Walmart ma'lumotlari uchun maxsus)
-        if 'Store' in df.columns:
-            st.sidebar.divider()
-            stores = sorted(df['Store'].unique())
-            selected_store = st.sidebar.selectbox("Do'konni tanlang:", stores)
-            df = df[df['Store'] == selected_store]
-            st.sidebar.info(f"{selected_store}-do'kon ma'lumotlari yuklandi.")
+    df['Date'] = pd.to_datetime(df['Date'])
 
-        # 3. TAHLIL USTUNINI TANLASH
-        numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+    # 2. FILTRLASH - Chalkashlikni yo'qotamiz
+    st.sidebar.divider()
+    st.sidebar.subheader("🎯 Filtrlash")
+    
+    # Do'konni tanlash
+    store_id = st.sidebar.selectbox("Do'kon raqamini tanlang:", sorted(df['Store'].unique()))
+    
+    # Bo'limni tanlash
+    df_store = df[df['Store'] == store_id]
+    dept_id = st.sidebar.selectbox(f"{store_id}-do'kondagi bo'limni tanlang:", sorted(df_store['Dept'].unique()))
+    
+    # Yakuniy toza ma'lumot
+    df_final = df_store[df_store['Dept'] == dept_id].sort_values('Date')
+
+    # 3. ASOSIY MONITORING (Raqamlar va birliklar bilan)
+    st.subheader(f"🏠 {store_id}-do'kon, {dept_id}-bo'lim bo'yicha hisobot")
+    
+    c1, c2, c3 = st.columns(3)
+    total_sales = df_final['Weekly_Sales'].sum()
+    avg_sales = df_final['Weekly_Sales'].mean()
+    max_sales = df_final['Weekly_Sales'].max()
+
+    # Raqamlarni chiroyli formatda chiqarish (1,234.56 $)
+    c1.metric("Umumiy Savdo", f"{total_sales:,.0f} {currency}")
+    c2.metric("O'rtacha Haftalik Savdo", f"{avg_sales:,.0f} {currency}")
+    c3.metric("Eng yuqori savdo", f"{max_sales:,.0f} {currency}")
+
+    # 4. GRAFIK (Tiniq va tushunarli)
+    st.divider()
+    st.write("### 📈 Haftalik savdo dinamikasi")
+    fig = px.area(df_final, x='Date', y='Weekly_Sales', 
+                 labels={'Weekly_Sales': f'Savdo ({currency})', 'Date': 'Vaqt'},
+                 color_discrete_sequence=['#00CC96'])
+    st.plotly_chart(fig, use_container_width=True)
+
+    # 5. AI BASHORATI
+    st.divider()
+    st.subheader("🤖 AI Bashorati")
+    
+    X = np.array(range(len(df_final))).reshape(-1, 1)
+    y = df_final['Weekly_Sales'].values
+    model = LinearRegression().fit(X, y)
+    prediction = model.predict([[len(df_final)]])[0]
+
+    st.success(f"Kelasi hafta uchun kutilayotgan savdo miqdori: **{prediction:,.2f} {currency}**")
+    
+    # AI Tavsiyasi
+    if prediction > avg_sales:
+        st.info(f"💡 AI Tavsiyasi: Kelasi haftada savdo o'rtacha ko'rsatkichdan yuqori bo'lishi kutilmoqda. Skladni **{currency}**lik mahsulotlar bilan to'ldiring!")
+    else:
+        st.warning(f"⚠️ AI Tavsiyasi: Savdo pasayishi kutilmoqda. Marketingga e'tibor bering.")
+
+else:
+    st.info("Iltimos, Walmart faylini yuklang. Shunda tahlillarni boshlaymiz.")        numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
         target_col = st.sidebar.selectbox("Tahlil qilinadigan raqamli ustun:", numeric_cols, 
                                          index=numeric_cols.index('Weekly_Sales') if 'Weekly_Sales' in numeric_cols else 0)
 
