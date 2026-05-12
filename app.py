@@ -14,8 +14,19 @@ with st.sidebar:
     uploaded_file = st.file_uploader("CSV yoki Excel faylni tanlang", type=['csv', 'xlsx'])
 
 if uploaded_file:
-    df = pd.read_csv(uploaded_file) if uploaded_file.name.endswith('.csv') else pd.read_excel(uploaded_file)
-    
+    # 1. Faylni o'qish (Encoding xatosini oldini olish bilan)
+    try:
+        if uploaded_file.name.endswith('.csv'):
+            df = pd.read_csv(uploaded_file, encoding='utf-8')
+        else:
+            df = pd.read_excel(uploaded_file)
+    except:
+        uploaded_file.seek(0)
+        df = pd.read_csv(uploaded_file, encoding='latin-1')
+
+    # ✨ Chatbot boshqa sahifada ma'lumotni ko'rishi uchun xotiraga saqlaymiz
+    st.session_state['data'] = df 
+
     # Avtomatik ustunlarni aniqlash (Sana, Savdo, Xarajat)
     date_col = next((col for col in df.columns if any(x in col.lower() for x in ['date', 'sana', 'vaqt'])), None)
     sales_col = next((col for col in df.columns if any(x in col.lower() for x in ['sales', 'savdo', 'tushum'])), None)
@@ -28,7 +39,7 @@ if uploaded_file:
         days_diff = (df[date_col].max() - df[date_col].min()).days
         data_points = len(df)
         time_unit = "kunlik" if days_diff / data_points < 2 else "haftalik" if days_diff / data_points < 10 else "oylik"
-
+        
     # 2. METRIKALAR (SAVDO VA XARAJAT ALOHIDA)
     st.subheader("📌 Moliyaviy Holat")
     m1, m2, m3, m4 = st.columns(4)
