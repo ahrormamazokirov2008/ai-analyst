@@ -106,20 +106,34 @@ if uploaded_file:
 
         with c_b:
             st.write("### 🎯 Nima qilish kerak?")
-        # Shartlarni biroz kengaytiramiz (3% o'sish/pasayish ham hisobga olinadi)
-        if sales_growth > 3:
-            st.success(f"✅ **Savdo o'smoqda:** Talab yuqori. Tavsiya: Tovar zaxiralarini oshiring va marketingni kuchaytiring.")
-        elif sales_growth < -3:
-            st.warning("⚠️ **Savdo pasaymoqda:** Mijozlar kamayishi kutilmoqda. Tavsiya: Narxlar strategiyasini qayta ko'rib chiqing yoki aksiyalar qiling.")
-        else:
-            # Agar o'sish ham, pasayish ham 3% dan kam bo'lsa, barqarorlik haqida yozadi
-            st.info("ℹ️ **Barqaror holat:** Bozorda keskin o'zgarish kutilmayapti. Xizmat sifatini oshirishga va doimiy mijozlarga e'tibor qarating.")
-            if expense_col:
-                expense_ratio = (total_expenses / total_sales) * 100 if total_sales > 0 else 0
-                if expense_ratio > 80:
-                    st.error(f"❗ **Xarajatlar juda yuqori:** Har bir so'm tushumning {expense_ratio:.0f}% qismi xarajatga ketyapti. Tavsiya: Keraksiz operatsion chiqimlarni zudlik bilan qisqartiring.")
-                elif expense_ratio < 40:
-                    st.success(f"💎 **Yuqori rentabellik:** Xarajatlar nazoratda. Tavsiya: Foydani biznesni kengaytirishga yoki yangi filiallar ochishga yo'naltiring.")
+        # 1. Avval holatni aniqlab olamiz (faqat bir marta)
+if sales_growth > 3:
+    holat_matni = "o'sish"
+    holat_rangi = "success"
+    tavsiya = "✅ **Savdo o'smoqda:** Talab yuqori. Tavsiya: Tovar zaxiralarini oshiring va marketingni kuchaytiring."
+elif sales_growth < -3:
+    holat_matni = "pasayish"
+    holat_rangi = "warning"
+    tavsiya = "⚠️ **Savdo pasaymoqda:** Mijozlar kamayishi kutilmoqda. Tavsiya: Narxlar strategiyasini qayta ko'rib chiqing yoki aksiyalar qiling."
+else:
+    holat_matni = "barqaror"
+    holat_rangi = "info"
+    tavsiya = "ℹ️ **Barqaror holat:** Bozorda keskin o'zgarish kutilmayapti. Xizmat sifatini oshirishga e'tibor qarating."
+
+# 2. Endi natijalarni ekranga chiqaramiz
+with c_a:
+    st.info(f"🔮 **Keyingi davr uchun bashorat:** {sales_pred:,.0f}")
+    st.write(f"Joriy holatda savdo yo'nalishi **{holat_matni}** tomon ketyapti.")
+
+with c_b:
+    st.write("### 🎯 Nima qilish kerak?")
+    # Holatga qarab tegishli rangli qutini chiqaramiz
+    if holat_rangi == "success":
+        st.success(tavsiya)
+    elif holat_rangi == "warning":
+        st.warning(tavsiya)
+    else:
+        st.info(tavsiya)
 
 else:
     st.info("Boshlash uchun biznes ma'lumotlarini yuklang. AI tizimi ularni avtomatik tahlil qilib, sizga tavsiyalar beradi.")
