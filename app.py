@@ -84,7 +84,7 @@ if uploaded_file:
                      title="Biznes dinamikasi (Optimallashtirilgan)",
                      template="plotly_dark") # Dizaynni chiroyli qilish uchun
         
-        fig.update_xaxes(rangeslider_visible=True)
+        fig.update_xaxes(rangeslider_visible=False)
         st.plotly_chart(fig, use_container_width=True)
 
     # 5. BASHORAT VA ANIQ TAVSIYALAR (Tuzatish 4 va 5)
@@ -105,13 +105,15 @@ if uploaded_file:
             st.write(f"Joriy holatda savdo yo'nalishi **{'o\'sish' if sales_growth > 0 else 'pasayish'}** tomon ketyapti.")
 
         with c_b:
-            st.subheader("🎯 Nima qilish kerak?")
-            # TADBIRKOR UCHUN ANIQ TAVSIYALAR
-            if sales_growth > 5:
-                st.success(f"✅ **Savdo o'smoqda:** Mijozlar talabi yuqori. Tavsiya: Tovar zaxiralarini {abs(sales_growth):.0f}% ga oshiring va marketingni kuchaytiring.")
-            elif sales_growth < -5:
-                st.warning(f"⚠️ **Diqqat, savdo pasaymoqda:** Mijozlarni yo'qotish xavfi bor. Tavsiya: Narxlar strategiyasini qayta ko'rib chiqing yoki aksiyalar tashkil qiling.")
-            
+            st.write("### 🎯 Nima qilish kerak?")
+        # Shartlarni biroz kengaytiramiz (3% o'sish/pasayish ham hisobga olinadi)
+        if growth > 3:
+            st.success(f"✅ **Savdo o'smoqda:** Talab yuqori. Tavsiya: Tovar zaxiralarini oshiring va marketingni kuchaytiring.")
+        elif growth < -3:
+            st.warning("⚠️ **Savdo pasaymoqda:** Mijozlar kamayishi kutilmoqda. Tavsiya: Narxlar strategiyasini qayta ko'rib chiqing yoki aksiyalar qiling.")
+        else:
+            # Agar o'sish ham, pasayish ham 3% dan kam bo'lsa, barqarorlik haqida yozadi
+            st.info("ℹ️ **Barqaror holat:** Bozorda keskin o'zgarish kutilmayapti. Xizmat sifatini oshirishga va doimiy mijozlarga e'tibor qarating.")
             if expense_col:
                 expense_ratio = (total_expenses / total_sales) * 100 if total_sales > 0 else 0
                 if expense_ratio > 80:
