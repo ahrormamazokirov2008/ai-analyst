@@ -16,7 +16,7 @@ with st.sidebar:
     
     st.divider()
     # Valyuta yoki birlikni tanlash
-    currency = st.selectbox("Birlikni tanlang:", ["$", "so'm", "ta"])
+    currency = st.selectbox("Birlikni tanlang:", ["USD", "UZS", "AUS"])
 
 if uploaded_file is not None:
     # Ma'lumotni o'qish
