@@ -1,0 +1,6 @@
+import kagglehub
+
+# Download selected version
+path = kagglehub.dataset_download("faresashraf1001/supermarket-sales/versions/1")
+
+print("Path to dataset files:", path)
