@@ -4,93 +4,97 @@ import plotly.express as px
 import numpy as np
 from sklearn.linear_model import LinearRegression
 
-# 1. SAHIFA SOZLAMALARI
-st.set_page_config(page_title="Universal Business AI", layout="wide", page_icon="🧠")
+st.set_page_config(page_title="AI Business Intelligence Pro", layout="wide", page_icon="📊")
 
-st.title("🚀 Universal AI Business Analyst")
-st.markdown("Istalgan kompaniya ma'lumotlarini yuklang va AI tahlilini oling.")
+st.title("🚀 Professional Biznes Analitika va Bashorat")
 
-# 2. MA'LUMOT YUKLASH
+# 1. MA'LUMOT YUKLASH
 with st.sidebar:
-    st.header("📂 Ma'lumotlar bazasi")
+    st.header("📂 Ma'lumotlar")
     uploaded_file = st.file_uploader("CSV yoki Excel faylni tanlang", type=['csv', 'xlsx'])
 
 if uploaded_file:
-    # Faylni o'qish
     df = pd.read_csv(uploaded_file) if uploaded_file.name.endswith('.csv') else pd.read_excel(uploaded_file)
     
-    # AVTOMATIK USTUNLARNI ANIQLASH
-    # Sanani topish
-    date_col = next((col for col in df.columns if any(x in col.lower() for x in ['date', 'sana', 'vaqt', 'timestamp'])), None)
+    # Avtomatik ustunlarni aniqlash (Sana, Savdo, Xarajat)
+    date_col = next((col for col in df.columns if any(x in col.lower() for x in ['date', 'sana', 'vaqt'])), None)
+    sales_col = next((col for col in df.columns if any(x in col.lower() for x in ['sales', 'savdo', 'tushum'])), None)
+    expense_col = next((col for col in df.columns if any(x in col.lower() for x in ['expense', 'xarajat', 'chiqim'])), None)
+
     if date_col:
         df[date_col] = pd.to_datetime(df[date_col])
         df = df.sort_values(date_col)
+        # Ma'lumot oralig'ini aniqlash (Kunlik, Haftalik, Oylik)
+        days_diff = (df[date_col].max() - df[date_col].min()).days
+        data_points = len(df)
+        time_unit = "kunlik" if days_diff / data_points < 2 else "haftalik" if days_diff / data_points < 10 else "oylik"
 
-    # Raqamli va Kategorial ustunlarni ajratish
-    numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
-    cat_cols = df.select_dtypes(include=['object', 'category']).columns.tolist()
-
-    # 3. DINAMIK FILTRLAR (Agar bor bo'lsa)
-    st.sidebar.divider()
-    filtered_df = df.copy()
-    if cat_cols:
-        st.sidebar.subheader("🎯 Filtrlash")
-        for col in cat_cols[:2]: # Faqat birinchi 2 ta kategoriyani filtrga chiqaramiz (chalkashlik bo'lmasligi uchun)
-            options = ["Hammasi"] + sorted(df[col].unique().tolist())
-            choice = st.sidebar.selectbox(f"{col} bo'yicha:", options)
-            if choice != "Hammasi":
-                filtered_df = filtered_df[filtered_df[col] == choice]
-
-    # 4. TAHLIL QILINADIGAN KO'RSATKICHNI TANLASH
-    target_metric = st.sidebar.selectbox("Tahlil ko'rsatkichi:", numeric_cols)
-
-    # 5. ASOSIY MONITORING
-    st.subheader(f"📊 {target_metric} bo'yicha tahliliy hisobot")
+    # 2. METRIKALAR (SAVDO VA XARAJAT ALOHIDA)
+    st.subheader("📌 Moliyaviy Holat")
+    m1, m2, m3, m4 = st.columns(4)
     
-    m1, m2, m3 = st.columns(3)
-    current_val = filtered_df[target_metric].iloc[-1]
-    avg_val = filtered_df[target_metric].mean()
-    total_val = filtered_df[target_metric].sum()
+    total_sales = df[sales_col].sum() if sales_col else 0
+    total_expenses = df[expense_col].sum() if expense_col else 0
+    total_profit = total_sales - total_expenses
+    
+    m1.metric("Umumiy Savdo", f"{total_sales:,.0f}")
+    m1.caption("Barcha davrlar uchun jami tushum")
+    
+    m2.metric("Umumiy Xarajat", f"{total_expenses:,.0f}")
+    m2.caption("Barcha davrlar uchun jami chiqim")
+    
+    m3.metric("Sof Foyda", f"{total_profit:,.0f}")
+    m3.caption("Savdo va xarajat o'rtasidagi farq")
+    
+    # 3. VAQTGA BOG'LANGAN O'RTACHA KO'RSATKICH (Tuzatish 2)
+    avg_expense = df[expense_col].mean() if expense_col else 0
+    m4.metric(f"O'rtacha {time_unit} xarajat", f"{avg_expense:,.0f}")
+    m4.caption(f"Ma'lumotlar {time_unit} formatda tahlil qilinmoqda")
 
-    m1.metric("Umumiy miqdor", f"{total_val:,.0f}")
-    m2.metric("O'rtacha ko'rsatkich", f"{avg_sales:,.0f}" if 'avg_sales' in locals() else f"{avg_val:,.0f}")
-    m3.metric("Oxirgi qayd etilgan", f"{current_val:,.0f}")
-
-    # 6. GRAFIK
-    if date_col:
-        fig = px.line(filtered_df, x=date_col, y=target_metric, title=f"{target_metric} o'zgarish dinamikasi",
-                     line_shape='spline', render_mode='svg')
+    # 4. GRAFIK (SAVDO VA XARAJAT ALOHIDA)
+    st.divider()
+    st.subheader("📈 Dinamika Tahlili")
+    cols_to_plot = []
+    if sales_col: cols_to_plot.append(sales_col)
+    if expense_col: cols_to_plot.append(expense_col)
+    
+    if date_col and cols_to_plot:
+        fig = px.line(df, x=date_col, y=cols_to_plot, 
+                     title="Vaqt kesimida savdo va xarajatlar",
+                     labels={'value': 'Miqdor', 'variable': 'Ko\'rsatkich'})
         st.plotly_chart(fig, use_container_width=True)
 
-    # 7. AI VA STRATEGIK TAVSIYALAR (Yaxshilangan mantiq)
+    # 5. BASHORAT VA ANIQ TAVSIYALAR (Tuzatish 4 va 5)
     st.divider()
-    st.subheader("🤖 AI Strategik Insights")
+    st.subheader("💡 AI Strategik Maslahatlari")
     
-    # Linear Regression - Bashorat uchun
-    X = np.array(range(len(filtered_df))).reshape(-1, 1)
-    y = filtered_df[target_metric].values
-    model = LinearRegression().fit(X, y)
-    next_pred = model.predict([[len(filtered_df)]])[0]
-    
-    # Trendni aniqlash (Slope)
-    slope = model.coef_[0]
-    growth_rate = (slope / avg_val) * 100 if avg_val != 0 else 0
+    if sales_col:
+        # AI Training (Simple)
+        X = np.array(range(len(df))).reshape(-1, 1)
+        y_sales = df[sales_col].values
+        model = LinearRegression().fit(X, y_sales)
+        sales_pred = model.predict([[len(df)]])[0]
+        sales_growth = ((sales_pred - df[sales_col].mean()) / df[sales_col].mean()) * 100
 
-    col_a, col_b = st.columns(2)
-    
-    with col_a:
-        st.write("### 🔮 Bashorat")
-        st.success(f"Kelasi davr uchun taxminiy miqdor: **{next_pred:,.2f}**")
-        st.write(f"Trend yo'nalishi: **{'O\'sish' if slope > 0 else 'Pasayish'}** ({growth_rate:.1f}% o'zgarish)")
+        c_a, c_b = st.columns(2)
+        with c_a:
+            st.info(f"🔮 **Keyingi davr uchun bashorat:** {sales_pred:,.0f}")
+            st.write(f"Joriy holatda savdo yo'nalishi **{'o\'sish' if sales_growth > 0 else 'pasayish'}** tomon ketyapti.")
 
-    with col_b:
-        st.write("### 💡 Strategik Tavsiya")
-        if growth_rate > 5:
-            st.info("✅ **O'sish tendensiyasi:** Ma'lumotlar barqaror o'sib bormoqda. Resurslarni kengaytirish va investitsiya kiritish uchun qulay vaqt.")
-        elif growth_rate < -5:
-            st.warning("⚠️ **Pasayish xavfi:** Ko'rsatkichlarda pasayish kuzatilyapti. Xarajatlarni optimallashtirish va mijozlarni jalb qilish strategiyasini o'zgartirish kerak.")
-        else:
-            st.write("ℹ️ **Stabil holat:** Katta o'zgarishlar kutilmayapti. Mavjud resurslarni saqlab qolish va kichik innovatsiyalar qilish tavsiya etiladi.")
+        with c_b:
+            st.subheader("🎯 Nima qilish kerak?")
+            # TADBIRKOR UCHUN ANIQ TAVSIYALAR
+            if sales_growth > 5:
+                st.success(f"✅ **Savdo o'smoqda:** Mijozlar talabi yuqori. Tavsiya: Tovar zaxiralarini {abs(sales_growth):.0f}% ga oshiring va marketingni kuchaytiring.")
+            elif sales_growth < -5:
+                st.warning(f"⚠️ **Diqqat, savdo pasaymoqda:** Mijozlarni yo'qotish xavfi bor. Tavsiya: Narxlar strategiyasini qayta ko'rib chiqing yoki aksiyalar tashkil qiling.")
+            
+            if expense_col:
+                expense_ratio = (total_expenses / total_sales) * 100 if total_sales > 0 else 0
+                if expense_ratio > 80:
+                    st.error(f"❗ **Xarajatlar juda yuqori:** Har bir so'm tushumning {expense_ratio:.0f}% qismi xarajatga ketyapti. Tavsiya: Keraksiz operatsion chiqimlarni zudlik bilan qisqartiring.")
+                elif expense_ratio < 40:
+                    st.success(f"💎 **Yuqori rentabellik:** Xarajatlar nazoratda. Tavsiya: Foydani biznesni kengaytirishga yoki yangi filiallar ochishga yo'naltiring.")
 
 else:
-    st.info("Boshlash uchun istalgan biznes faylini yuklang (masalan: Savdo, Mijozlar oqimi, Ombor qoldiqlari).")
+    st.info("Boshlash uchun biznes ma'lumotlarini yuklang. AI tizimi ularni avtomatik tahlil qilib, sizga tavsiyalar beradi.")
