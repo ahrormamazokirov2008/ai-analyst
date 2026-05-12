@@ -4,32 +4,33 @@ import plotly.express as px
 import numpy as np
 from sklearn.linear_model import LinearRegression
 
-# 1. SAHIFA SOZLAMALARI
-st.set_page_config(page_title="Universal AI Analyst Pro", layout="wide", page_icon="📈")
+# 1. Sahifa sozlamalari
+st.set_page_config(page_title="Business AI Analyst", layout="wide", page_icon="📊")
 
-st.title("📊 Universal AI Biznes Analitika")
+st.title("🚀 Professional Biznes Analitika")
 
-# 2. MA'LUMOT YUKLASH (Aqliy o'qish tizimi bilan)
+# 2. Ma'lumotlarni yuklash
 with st.sidebar:
-    st.header("📂 Ma'lumotlar")
-    uploaded_file = st.file_uploader("Faylni yuklang (CSV/Excel)", type=['csv', 'xlsx'])
+    st.header("📂 Fayl boshqaruvi")
+    uploaded_file = st.file_uploader("Faylni tanlang (CSV/Excel)", type=['csv', 'xlsx'])
 
 if uploaded_file is not None:
+    # Faylni o'qish (xatoliklarni oldini olish bilan)
     try:
         if uploaded_file.name.endswith('.csv'):
             df = pd.read_csv(uploaded_file, encoding='utf-8')
         else:
             df = pd.read_excel(uploaded_file)
-    except UnicodeDecodeError:
+    except:
         uploaded_file.seek(0)
         df = pd.read_csv(uploaded_file, encoding='latin-1')
 
-    # Ustunlarni avtomatik aniqlash
-    date_col = next((c for c in df.columns if any(x in c.lower() for x in ['date', 'sana', 'vaqt', 'time'])), None)
+    # Ustunlarni avtomatik qidirish
+    date_col = next((c for c in df.columns if any(x in c.lower() for x in ['date', 'sana', 'vaqt'])), None)
     numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
     
     st.sidebar.divider()
-    st.sidebar.subheader("⚙️ Tahlil sozlamalari")
+    st.sidebar.subheader("⚙️ Sozlamalar")
     sales_col = st.sidebar.selectbox("Savdo (Tushum) ustunini tanlang:", numeric_cols)
     expense_col = st.sidebar.selectbox("Xarajat (Chiqim) ustunini tanlang (ixtiyoriy):", ["Mavjud emas"] + numeric_cols)
 
@@ -37,46 +38,30 @@ if uploaded_file is not None:
         df[date_col] = pd.to_datetime(df[date_col])
         df = df.sort_values(date_col)
 
-    # 3. MOLIYAVIY MONITORING
+    # 3. Asosiy ko'rsatkichlar
     st.subheader("📌 Moliyaviy Holat")
-    m1, m2, m3 = st.columns(3)
+    c1, c2, c3 = st.columns(3)
     
     total_sales = df[sales_col].sum()
     total_exp = df[expense_col].sum() if expense_col != "Mavjud emas" else 0
     
-    m1.metric("Umumiy Savdo", f"{total_sales:,.0f}")
-    m2.metric("Umumiy Xarajat", f"{total_exp:,.0f}")
-    m3.metric("Sof Foyda", f"{(total_sales - total_exp):,.0f}")
+    c1.metric("Umumiy Savdo", f"{total_sales:,.0f}")
+    c2.metric("Umumiy Xarajat", f"{total_exp:,.0f}")
+    c3.metric("Sof Foyda", f"{(total_sales - total_exp):,.0f}")
 
-    # 4. SMART GRAFIK (Katta ma'lumotlar uchun tekislash tizimi)
+    # 4. Oddiy va tiniq grafik
     st.divider()
-    st.subheader("📈 Dinamika Tahlili")
+    st.subheader("📈 Savdo va Xarajat Dinamikasi")
     
     plot_cols = [sales_col]
     if expense_col != "Mavjud emas": plot_cols.append(expense_col)
     
     if date_col:
-        plot_df = df.copy()
-        
-        # Katta ma'lumotlar uchun filtrlar
-        if len(df) > 30:
-            view_type = st.radio("Ma'lumotlarni ko'rsatish shakli:", 
-                                ["Asl holati (Kunlik)", "Haftalik trend (Tekislangan)", "Oylik xulosa"], horizontal=True)
-            
-            if view_type == "Haftalik trend (Tekislangan)":
-                for col in plot_cols:
-                    plot_df[col] = plot_df[col].rolling(window=7).mean()
-                st.info("💡 Grafik 7 kunlik siljuvchi o'rtacha asosida tekislandi.")
-            elif view_type == "Oylik xulosa":
-                plot_df = plot_df.resample('M', on=date_col).sum().reset_index()
-                st.info("💡 Ma'lumotlar oylar bo'yicha umumlashtirildi.")
-
-        # Grafik chizish
-        fig = px.line(plot_df, x=date_col, y=plot_cols, title="Biznes o'zgarish dinamikasi")
-        fig.update_xaxes(rangeslider_visible=True) # Surgich qo'shish
+        fig = px.line(df, x=date_col, y=plot_cols, title="Vaqt kesimidagi o'zgarishlar")
+        fig.update_xaxes(rangeslider_visible=True) # Faqat masshtab uchun surgich qoldi
         st.plotly_chart(fig, use_container_width=True)
 
-    # 5. AI BASHORAT VA TAVSIYALAR
+    # 5. AI Tavsiyalari
     st.divider()
     st.subheader("🤖 AI Strategik Maslahatlari")
     
@@ -87,18 +72,18 @@ if uploaded_file is not None:
     avg_s = df[sales_col].mean()
     growth = ((pred - avg_s) / avg_s) * 100
 
-    c_left, c_right = st.columns(2)
-    with c_left:
-        st.info(f"🔮 **Bashorat:** Kelasi davrda savdo miqdori taxminan **{pred:,.0f}** bo'lishi kutilmoqda.")
+    col_l, col_r = st.columns(2)
+    with col_l:
+        st.info(f"🔮 **Bashorat:** Kelasi davrda savdo taxminan **{pred:,.0f}** bo'lishi kutilmoqda.")
     
-    with c_right:
+    with col_r:
         st.write("### 🎯 Nima qilish kerak?")
         if growth > 5:
-            st.success(f"✅ **Savdo o'smoqda:** Talab yuqori. Tavsiya: Tovar zaxiralarini oshiring va mijozlar oqimiga tayyor turing.")
+            st.success(f"✅ **Savdo o'smoqda:** Tovar zaxiralarini oshiring va mijozlar oqimiga tayyor turing.")
         elif growth < -5:
-            st.warning("⚠️ **Savdo pasaymoqda:** Mijozlarni yo'qotish xavfi bor. Tavsiya: Narxlar strategiyasini qayta ko'rib chiqing yoki aksiyalar tashkil qiling.")
+            st.warning("⚠️ **Savdo pasaymoqda:** Narxlar strategiyasini qayta ko'rib chiqing yoki aksiyalar tashkil qiling.")
         else:
-            st.write("ℹ️ **Stabil holat:** Katta o'zgarishlar kutilmayapti. Xizmat sifatini oshirishga e'tibor qarating.")
+            st.write("ℹ️ **Stabil holat:** Katta o'zgarishlar kutilmayapti. Xizmat sifatini oshiring.")
 
 else:
     st.info("Boshlash uchun biznes ma'lumotlarini yuklang.")
